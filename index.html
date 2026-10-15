@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>SEHC Masterchef 2026 - Scoring App</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            samsung: {
+              DEFAULT: '#034EA2', // Official Samsung Blue
+              dark: '#002C66',
+              light: '#0070D2',
+              soft: '#EBF3FB',
+              accent: '#1428A0'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Mobile-first touch enhancements */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea {
+      user-select: text;
+    }
+    body {
+      background-color: #F8FAFC;
+      color: #0F172A;
+      font-family: 'Inter', sans-serif;
+    }
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    .safe-top {
+      padding-top: env(safe-area-inset-top, 16px);
+    }
+    /* Star bounce animation */
+    .star-btn {
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .star-btn:active {
+      transform: scale(1.3);
+    }
+    /* Glass card */
+    .glass-card {
+      background: #FFFFFF;
+      box-shadow: 0 4px 20px -2px rgba(3, 78, 162, 0.08);
+    }
+    /* Hide scrollbars but keep scroll functionality */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 antialiased pb-12">
+
+  <!-- ================= APP HEADER ================= -->
+  <header class="sticky top-0 z-40 bg-samsung text-white shadow-md safe-top">
+    <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center font-bold text-lg tracking-wider border border-white/20">
+          🍳
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-tight leading-tight">SEHC MASTERCHEF</h1>
+          <p class="text-[11px] font-medium text-blue-100/90 tracking-wider">ANNUAL COOKING CONTEST 2026</p>
+        </div>
+      </div>
+      
+      <!-- Top Action Buttons -->
+      <div class="flex items-center space-x-2">
+        <button id="btnSettings" onclick="openSettingsModal()" title="API Settings"
+          class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition active:scale-90">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </button>
+        <button id="btnAdminNav" onclick="promptAdminAccess()" title="Admin Leaderboard"
+          class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white/20 hover:bg-white/30 text-white transition active:scale-95 flex items-center space-x-1 border border-white/20">
+          <span>📊</span>
+          <span>Admin</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="max-w-md mx-auto w-full px-4 pt-4 flex-1">
+
+    <!-- ------------------------------------------------------------- -->
+    <!-- VIEW 1: JUDGE SELECTION (STEP 1)                               -->
+    <!-- ------------------------------------------------------------- -->
+    <section id="viewJudgeSelect" class="space-y-4">
+      <div class="text-center pt-2 pb-1">
+        <span class="inline-block px-3 py-1 bg-samsung-soft text-samsung font-semibold text-xs rounded-full uppercase tracking-wider mb-2">
+          Step 1: Judge Verification
+        </span>
+        <h2 class="text-xl font-extrabold text-slate-800">Select Your Name</h2>
+        <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+          Please identify yourself from the judging panel below to access your designated category.
+        </p>
+      </div>
+
+      <!-- Judge Selection Groups Container -->
+      <div id="judgeListContainer" class="space-y-4">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+
+      <div class="pt-4 text-center">
+        <button onclick="promptAdminAccess()" class="text-xs font-medium text-slate-400 hover:text-samsung underline">
+          Admin Portal (Restricted Access)
+        </button>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------- -->
+    <!-- VIEW 2: TEAM & DISH LIST (STEP 2)                             -->
+    <!-- ------------------------------------------------------------- -->
+    <section id="viewTeamList" class="hidden space-y-4">
+      <!-- Judge Greeting & Group Banner -->
+      <div class="bg-gradient-to-r from-samsung to-samsung-dark text-white rounded-2xl p-4 shadow-lg relative overflow-hidden">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between">
+            <span id="currentGroupBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-sm">
+              Korean Dish
+            </span>
+            <button onclick="switchJudge()" class="text-xs text-blue-200 hover:text-white underline font-medium">
+              Switch Judge ⇄
+            </button>
+          </div>
+          <h2 id="currentJudgeGreeting" class="text-xl font-bold mt-2">Welcome, Judge</h2>
+          <p class="text-xs text-blue-100/90 mt-0.5">Tap on a dish below to score this team.</p>
+          
+          <!-- Progress indicator -->
+          <div class="mt-3 pt-3 border-t border-white/15 flex items-center justify-between text-xs">
+            <span class="font-medium text-blue-100">Scoring Progress:</span>
+            <span id="scoringProgressText" class="font-bold text-white">0 / 5 Completed</span>
+          </div>
+          <div class="w-full bg-white/20 h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div id="scoringProgressBar" class="bg-amber-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+        <!-- Decorative background circle -->
+        <div class="absolute -right-6 -bottom-8 w-28 h-28 bg-white/5 rounded-full pointer-events-none"></div>
+      </div>
+
+      <!-- Teams Container -->
+      <div class="space-y-3" id="teamsContainer">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------- -->
+    <!-- VIEW 3: SCORING FORM (STEP 3)                                 -->
+    <!-- ------------------------------------------------------------- -->
+    <section id="viewScoringForm" class="hidden space-y-4 pb-20">
+      <!-- Back navigation & Team Info -->
+      <div class="flex items-center justify-between">
+        <button onclick="backToTeamList()" class="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-samsung py-1 pr-2">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Back to Dishes
+        </button>
+        <span id="scoringFormGroupTag" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-samsung-soft text-samsung uppercase">
+          Category
+        </span>
+      </div>
+
+      <!-- Selected Team Header Card -->
+      <div class="glass-card rounded-2xl p-4 border border-blue-100 relative">
+        <div class="flex items-start justify-between">
+          <div class="space-y-1">
+            <span class="text-xs font-bold text-samsung tracking-wide uppercase" id="scoreTeamDept">Department Name</span>
+            <h3 class="text-lg font-bold text-slate-900 leading-snug" id="scoreDishNameVi">Tên Món Ăn (Tiếng Việt)</h3>
+            <p class="text-xs font-semibold text-slate-500" id="scoreDishNameKr">Korean Translation</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-samsung-soft text-samsung flex items-center justify-center text-xl flex-shrink-0">
+            🍽️
+          </div>
+        </div>
+      </div>
+
+      <!-- Scoring Criteria Instruction -->
+      <div class="bg-amber-50 border border-amber-200/80 rounded-xl p-3 flex items-start space-x-2.5">
+        <span class="text-amber-500 text-base leading-none mt-0.5">⭐</span>
+        <p class="text-xs text-amber-800 leading-relaxed font-medium">
+          Rate each of the 5 criteria from 1 to 5 stars. Total score will be calculated automatically (Max: 25 pts).
+        </p>
+      </div>
+
+      <!-- CRITERIA 1 -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-200 space-y-2.5">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-5 h-5 rounded-full bg-samsung text-white text-[11px] font-bold flex items-center justify-center">1</span>
+              <h4 class="text-sm font-bold text-slate-900">Taste & Flavor</h4>
+            </div>
+            <p class="text-xs text-slate-500 font-medium ml-6">Hương vị món ăn (Deliciousness, seasoning, balance)</p>
+          </div>
+          <span id="val_taste" class="text-sm font-extrabold text-samsung bg-samsung-soft px-2 py-0.5 rounded-lg">0 / 5</span>
+        </div>
+        <div class="flex items-center justify-around pt-1" id="stars_taste">
+          <!-- Rendered 5 stars -->
+        </div>
+      </div>
+
+      <!-- CRITERIA 2 -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-200 space-y-2.5">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-5 h-5 rounded-full bg-samsung text-white text-[11px] font-bold flex items-center justify-center">2</span>
+              <h4 class="text-sm font-bold text-slate-900">Decoration & Plating</h4>
+            </div>
+            <p class="text-xs text-slate-500 font-medium ml-6">Trang trí, trình bày món ăn (Visual appeal, creativity)</p>
+          </div>
+          <span id="val_decoration" class="text-sm font-extrabold text-samsung bg-samsung-soft px-2 py-0.5 rounded-lg">0 / 5</span>
+        </div>
+        <div class="flex items-center justify-around pt-1" id="stars_decoration">
+          <!-- Rendered 5 stars -->
+        </div>
+      </div>
+
+      <!-- CRITERIA 3 -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-200 space-y-2.5">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-5 h-5 rounded-full bg-samsung text-white text-[11px] font-bold flex items-center justify-center">3</span>
+              <h4 class="text-sm font-bold text-slate-900">Presentation & Story</h4>
+            </div>
+            <p class="text-xs text-slate-500 font-medium ml-6">Thuyết trình về món ăn (Concept, story, confidence)</p>
+          </div>
+          <span id="val_presentation" class="text-sm font-extrabold text-samsung bg-samsung-soft px-2 py-0.5 rounded-lg">0 / 5</span>
+        </div>
+        <div class="flex items-center justify-around pt-1" id="stars_presentation">
+          <!-- Rendered 5 stars -->
+        </div>
+      </div>
+
+      <!-- CRITERIA 4 -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-200 space-y-2.5">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-5 h-5 rounded-full bg-samsung text-white text-[11px] font-bold flex items-center justify-center">4</span>
+              <h4 class="text-sm font-bold text-slate-900">Teamwork & Korean Collab</h4>
+            </div>
+            <p class="text-xs text-slate-500 font-medium ml-6">Tinh thần đoàn kết & có thành viên người Hàn Quốc</p>
+          </div>
+          <span id="val_teamwork" class="text-sm font-extrabold text-samsung bg-samsung-soft px-2 py-0.5 rounded-lg">0 / 5</span>
+        </div>
+        <div class="flex items-center justify-around pt-1" id="stars_teamwork">
+          <!-- Rendered 5 stars -->
+        </div>
+      </div>
+
+      <!-- CRITERIA 5 -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-200 space-y-2.5">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-5 h-5 rounded-full bg-samsung text-white text-[11px] font-bold flex items-center justify-center">5</span>
+              <h4 class="text-sm font-bold text-slate-900">Cleanliness & Hygiene</h4>
+            </div>
+            <p class="text-xs text-slate-500 font-medium ml-6">Khu vực thi sạch sẽ sau khi hoàn thành</p>
+          </div>
+          <span id="val_cleanliness" class="text-sm font-extrabold text-samsung bg-samsung-soft px-2 py-0.5 rounded-lg">0 / 5</span>
+        </div>
+        <div class="flex items-center justify-around pt-1" id="stars_cleanliness">
+          <!-- Rendered 5 stars -->
+        </div>
+      </div>
+
+      <!-- TOTAL SCORE DISPLAY -->
+      <div class="bg-gradient-to-r from-samsung-dark to-samsung text-white rounded-2xl p-4 flex items-center justify-between shadow-md">
+        <div>
+          <span class="text-xs text-blue-200 font-medium uppercase tracking-wider">Overall Score</span>
+          <h4 class="text-base font-bold">Total Points</h4>
+        </div>
+        <div class="text-right">
+          <span id="scoreTotalVal" class="text-3xl font-extrabold text-amber-300">0</span>
+          <span class="text-sm font-semibold text-blue-200">/ 25</span>
+        </div>
+      </div>
+
+      <!-- MANDATORY ENGLISH COMMENT -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <label for="judgeComment" class="text-xs font-bold text-slate-800 uppercase tracking-wide">
+            Judge Feedback & Comment (English) <span class="text-red-500">*</span>
+          </label>
+          <span id="commentCharCount" class="text-[11px] text-slate-400 font-mono">0 chars</span>
+        </div>
+        <textarea id="judgeComment" rows="3" 
+          placeholder="Please write your constructive evaluation and feedback in English (Mandatory)..."
+          class="w-full text-sm p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-samsung focus:border-transparent text-slate-800 placeholder-slate-400 resize-none transition"
+          oninput="updateCommentCount()"></textarea>
+        <p id="commentError" class="text-xs text-red-500 font-semibold hidden">
+          ⚠️ Please provide your evaluation comments in English.
+        </p>
+      </div>
+
+      <!-- SUBMIT BUTTON -->
+      <div class="pt-2">
+        <button id="btnSubmitScore" onclick="submitScore()" 
+          class="w-full py-4 px-6 rounded-2xl bg-samsung hover:bg-samsung-dark active:scale-[0.98] text-white font-bold text-base shadow-lg shadow-blue-500/25 transition duration-150 flex items-center justify-center space-x-2">
+          <span id="btnSubmitText">Submit Score & Continue</span>
+          <svg id="submitSpinner" class="hidden w-5 h-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------- -->
+    <!-- VIEW 4: ADMIN LEADERBOARD VIEW                                -->
+    <!-- ------------------------------------------------------------- -->
+    <section id="viewAdmin" class="hidden space-y-4 pb-20">
+      <!-- Admin Header Banner -->
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-xs font-bold text-samsung uppercase tracking-wider">Official Statistics</span>
+          <h2 class="text-xl font-black text-slate-900">Admin Leaderboard</h2>
+        </div>
+        <button onclick="exitAdmin()" class="px-3 py-1.5 rounded-xl bg-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-300 transition">
+          Exit Admin
+        </button>
+      </div>
+
+      <!-- Refresh & Summary Bar -->
+      <div class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-xs">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-slate-600 font-medium" id="adminSyncStatus">Live Data Sync</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="fetchLeaderboardFromCloud()" class="px-2.5 py-1 bg-samsung-soft text-samsung font-bold rounded-lg hover:bg-blue-100 transition active:scale-95 flex items-center space-x-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span>Refresh</span>
+          </button>
+          <button onclick="exportScoresToCSV()" class="px-2.5 py-1 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition active:scale-95">
+            📥 CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="flex rounded-xl bg-slate-200/80 p-1 space-x-1 text-xs font-bold">
+        <button id="adminTabAll" onclick="setAdminFilter('all')" class="flex-1 py-2 rounded-lg bg-white text-samsung shadow-sm transition">
+          All
+        </button>
+        <button id="adminTabKorean" onclick="setAdminFilter('Korean Dish')" class="flex-1 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+          Korean
+        </button>
+        <button id="adminTabVietnamese" onclick="setAdminFilter('Vietnamese Dish')" class="flex-1 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+          Vietnamese
+        </button>
+        <button id="adminTabEuropean" onclick="setAdminFilter('European Dish')" class="flex-1 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+          European
+        </button>
+      </div>
+
+      <!-- Leaderboard List Container -->
+      <div id="adminLeaderboardContainer" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODAL: ADMIN PASSCODE ================= -->
+  <div id="modalPasscode" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xs w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100 animate-in fade-in zoom-in duration-200">
+      <div class="w-12 h-12 rounded-2xl bg-samsung-soft text-samsung mx-auto flex items-center justify-center text-2xl font-bold">
+        🔒
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-slate-900">Admin Security</h3>
+        <p class="text-xs text-slate-500 mt-1">Enter 4-digit passcode to access the competition leaderboard.</p>
+      </div>
+      
+      <div>
+        <input type="password" id="adminPassInput" maxlength="6" inputmode="numeric" placeholder="Enter PIN"
+          class="w-full text-center text-2xl tracking-[0.4em] font-mono py-2.5 rounded-xl border-2 border-slate-200 focus:border-samsung focus:outline-none transition" />
+        <p id="adminPassError" class="text-xs text-red-500 font-medium mt-1.5 hidden">Incorrect passcode. Try again.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button onclick="closePasscodeModal()" class="py-2.5 text-xs font-bold text-slate-600 rounded-xl bg-slate-100 hover:bg-slate-200 transition">
+          Cancel
+        </button>
+        <button onclick="verifyAdminPasscode()" class="py-2.5 text-xs font-bold text-white rounded-xl bg-samsung hover:bg-samsung-dark transition shadow-md shadow-blue-500/20">
+          Unlock
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: TEAM SCORE DETAIL (ADMIN) ================= -->
+  <div id="modalTeamDetail" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="p-4 bg-samsung text-white flex items-start justify-between">
+        <div>
+          <span id="detailTeamGroup" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/20">
+            Group
+          </span>
+          <h3 id="detailTeamName" class="text-base font-bold mt-1">Team Department</h3>
+          <p id="detailDishName" class="text-xs text-blue-100">Dish Name</p>
+        </div>
+        <button onclick="closeTeamDetailModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-lg">
+          &times;
+        </button>
+      </div>
+
+      <!-- Modal Body (List of Judge Scores) -->
+      <div id="detailScoresList" class="p-4 space-y-4 overflow-y-auto max-h-[60vh] no-scrollbar">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <button onclick="closeTeamDetailModal()" class="px-5 py-2 text-xs font-bold rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SETTINGS (GAS URL) ================= -->
+  <div id="modalSettings" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-slate-100">
+      <div class="flex items-center justify-between border-b pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">⚙️</span>
+          <h3 class="text-base font-bold text-slate-900">Backend Connection</h3>
+        </div>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+      
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-slate-700 uppercase">Google Apps Script Web App URL</label>
+        <p class="text-[11px] text-slate-500 leading-normal">
+          Paste the deployed Web App URL (`.../exec`) from your Google Spreadsheet Apps Script.
+        </p>
+        <input type="url" id="settingScriptUrl" placeholder="https://script.google.com/macros/s/.../exec"
+          class="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-samsung text-slate-800 font-mono" />
+      </div>
+
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-2.5 text-[11px] text-blue-800 space-y-1">
+        <p class="font-semibold">💡 Tips:</p>
+        <p>• Offline mode: Scores will be saved in your local browser even without the URL.</p>
+        <p>• When configured, scores will automatically sync to your Google Sheet!</p>
+      </div>
+
+      <div class="flex space-x-2 pt-1">
+        <button onclick="closeSettingsModal()" class="flex-1 py-2.5 text-xs font-bold text-slate-600 rounded-xl bg-slate-100 hover:bg-slate-200 transition">
+          Cancel
+        </button>
+        <button onclick="saveSettings()" class="flex-1 py-2.5 text-xs font-bold text-white rounded-xl bg-samsung hover:bg-samsung-dark transition shadow-md shadow-blue-500/20">
+          Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST NOTIFICATION ================= -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 transform -translate-y-20 opacity-0 pointer-events-none">
+    <div id="toastContent" class="px-4 py-2.5 rounded-2xl shadow-xl flex items-center space-x-2 text-xs font-bold bg-slate-900 text-white border border-white/10">
+      <span id="toastIcon">✅</span>
+      <span id="toastMessage">Action completed</span>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
+  <script>
+    /**
+     * ==========================================================================
+     * HARDCODED COMPETITION DATA (GROUPS, JUDGES, TEAMS)
+     * ==========================================================================
+     */
+    const MASTERCHEF_DATA = [
+      {
+        id: "korean",
+        groupTitle: "Group A (Korean dishes)",
+        groupName: "Korean Dish",
+        badgeBg: "bg-blue-50 text-blue-700 border-blue-200",
+        headerColor: "from-blue-700 to-indigo-800",
+        judges: [
+          "Mr Nam VP",
+          "Mr Huỳnh Lê Thái",
+          "Mr Lee Daesung"
+        ],
+        teams: [
+          {
+            id: "k-1",
+            teamName: "SMD Production G",
+            dishName: "Bulgogi Ssam",
+            dishNameKr: "불고기 쌈"
+          },
+          {
+            id: "k-2",
+            teamName: "Workplace Solution G",
+            dishName: "Bạch tuộc xào cay",
+            dishNameKr: "매콤 문어 볶음"
+          },
+          {
+            id: "k-3",
+            teamName: "Mold G",
+            dishName: "Gà xào cay",
+            dishNameKr: "매콤 닭 볶음"
+          },
+          {
+            id: "k-4",
+            teamName: "VD Prod. Strategy G",
+            dishName: "Gà sốt cay phô mai",
+            dishNameKr: "매콤 치즈 닭"
+          },
+          {
+            id: "k-5",
+            teamName: "VD3 Production G",
+            dishName: "Kim bắp - Thịt heo chiên xù - Kim chi",
+            dishNameKr: "김밥 – 돼지고기 돈가스 – 김치"
+          }
+        ]
+      },
+      {
+        id: "vietnamese",
+        groupTitle: "Group B (Vietnamese dishes)",
+        groupName: "Vietnamese Dish",
+        badgeBg: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        headerColor: "from-emerald-700 to-teal-800",
+        judges: [
+          "Mr President",
+          "Mr Nguyễn Tấn Hưng",
+          "Mr Trương Tuấn Phương"
+        ],
+        teams: [
+          {
+            id: "v-1",
+            teamName: "VD Quality Assurance G",
+            dishName: "Bánh xèo tôm thịt",
+            dishNameKr: "베트남식 바인셔오 (새우 돼지고기 전)"
+          },
+          {
+            id: "v-2",
+            teamName: "EHS Infra G",
+            dishName: "Gỏi tôm thịt ngó sen",
+            dishNameKr: "연꽃줄기 새우 돼지고기 샐러드"
+          },
+          {
+            id: "v-3",
+            teamName: "T/F Admin",
+            dishName: "Bún bò",
+            dishNameKr: "소고기 쌀국수"
+          },
+          {
+            id: "v-4",
+            teamName: "People G",
+            dishName: "Bánh canh ghẹ hải sản",
+            dishNameKr: "해산물 꽃게 국수"
+          },
+          {
+            id: "v-5",
+            teamName: "W/M Quality Assurance G",
+            dishName: "Lẩu gà lá é",
+            dishNameKr: "닭 에잎 샤브샤브"
+          }
+        ]
+      },
+      {
+        id: "european",
+        groupTitle: "Group C (European dishes)",
+        groupName: "European Dish",
+        badgeBg: "bg-purple-50 text-purple-700 border-purple-200",
+        headerColor: "from-purple-700 to-indigo-900",
+        judges: [
+          "Mr CFO",
+          "Mr. KT Sohn",
+          "Mr Đàm Đinh Tuân"
+        ],
+        teams: [
+          {
+            id: "e-1",
+            teamName: "Living Production G",
+            dishName: "Bò xốt tiêu xanh",
+            dishNameKr: "그린페퍼 소스 소고기"
+          },
+          {
+            id: "e-2",
+            teamName: "LED Production G",
+            dishName: "Cá hồi sốt kem chanh",
+            dishNameKr: "레몬 크림 소스 연어"
+          },
+          {
+            id: "e-3",
+            teamName: "VD Circuit R&D G",
+            dishName: "Gà nấu táo",
+            dishNameKr: "사과 조림 닭"
+          },
+          {
+            id: "e-4",
+            teamName: "VD3 Production G",
+            dishName: "Lườn Ngỗng Nga hun khói áp chảo",
+            dishNameKr: "훈제 러시아산 거위 가슴살 팬구이"
+          },
+          {
+            id: "e-5",
+            teamName: "Material Management G",
+            dishName: "Cá chẽm áp chảo sốt chanh dây",
+            dishNameKr: "패션프루트 소스를 곁들인 농어구이"
+          }
+        ]
+      }
+    ];
+
+    /**
+     * Configuration and State Variables
+     */
+    const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG6XFsPZ4HACwTCJdDHKAXCoPlQMqrhSlbNUcbwjD_97keZVMxygL-v3NGGATY3RbM/exec";
+    const ADMIN_PASSCODE = "2468";
+    
+    let currentJudge = null;
+    let currentGroup = null;
+    let currentTeam = null;
+    let currentRatings = {
+      taste: 0,
+      decoration: 0,
+      presentation: 0,
+      teamwork: 0,
+      cleanliness: 0
+    };
+    let localScores = []; // Array of score records
+    let adminFilter = "all";
+
+    /**
+     * Initialization on Document Ready
+     */
+    document.addEventListener("DOMContentLoaded", () => {
+      loadSavedSettings();
+      loadLocalScores();
+      renderJudgeSelection();
+      initStarRatings();
+
+      // Check if judge was previously chosen in this session
+      const savedJudge = localStorage.getItem("sehc_current_judge");
+      if (savedJudge) {
+        selectJudgeByName(savedJudge, false);
+      }
+    });
+
+    /**
+     * Load settings from LocalStorage
+     */
+    function loadSavedSettings() {
+      let savedUrl = localStorage.getItem("sehc_script_url");
+      if (!savedUrl || savedUrl.trim() === "") {
+        savedUrl = DEFAULT_SCRIPT_URL;
+        localStorage.setItem("sehc_script_url", DEFAULT_SCRIPT_URL);
+      }
+      document.getElementById("settingScriptUrl").value = savedUrl;
+    }
+
+    function getScriptUrl() {
+      const stored = localStorage.getItem("sehc_script_url");
+      return (stored && stored.trim() !== "") ? stored : DEFAULT_SCRIPT_URL;
+    }
+
+    function saveSettings() {
+      const url = document.getElementById("settingScriptUrl").value.trim();
+      localStorage.setItem("sehc_script_url", url);
+      closeSettingsModal();
+      showToast("Settings saved!", "⚙️");
+      // Optionally trigger sync
+      if (url) {
+        syncCloudScores();
+      }
+    }
+
+    function openSettingsModal() {
+      document.getElementById("settingScriptUrl").value = getScriptUrl();
+      document.getElementById("modalSettings").classList.remove("hidden");
+    }
+
+    function closeSettingsModal() {
+      document.getElementById("modalSettings").classList.add("hidden");
+    }
+
+    /**
+     * Local Scores Storage Management
+     */
+    function loadLocalScores() {
+      try {
+        const stored = localStorage.getItem("sehc_scores_data");
+        localScores = stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        localScores = [];
+      }
+    }
+
+    function saveLocalScores() {
+      localStorage.setItem("sehc_scores_data", JSON.stringify(localScores));
+    }
+
+    /**
+     * STEP 1: Render Judge Selection Cards
+     */
+    function renderJudgeSelection() {
+      const container = document.getElementById("judgeListContainer");
+      container.innerHTML = "";
+
+      MASTERCHEF_DATA.forEach(group => {
+        const groupCard = document.createElement("div");
+        groupCard.className = "glass-card rounded-2xl p-4 border border-slate-200 space-y-3";
+
+        let buttonsHtml = group.judges.map(judge => `
+          <button onclick="selectJudgeByName('${judge}')"
+            class="w-full text-left p-3.5 px-4 rounded-xl border border-slate-200 bg-white hover:border-samsung hover:bg-samsung-soft/40 transition active:scale-[0.99] flex items-center justify-between group shadow-sm">
+            <span class="text-sm font-bold text-slate-800 group-hover:text-samsung transition">${judge}</span>
+            <span class="text-xs font-semibold text-samsung bg-samsung-soft px-3 py-1 rounded-lg group-hover:bg-samsung group-hover:text-white transition">Select →</span>
+          </button>
+        `).join("");
+
+        groupCard.innerHTML = `
+          <div class="flex items-center justify-between border-b pb-2.5">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-samsung">${group.groupTitle}</h3>
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${group.badgeBg}">
+              ${group.groupName}
+            </span>
+          </div>
+          <div class="space-y-2">
+            ${buttonsHtml}
+          </div>
+        `;
+
+        container.appendChild(groupCard);
+      });
+    }
+
+    /**
+     * Select Judge & Proceed to Step 2
+     */
+    function selectJudgeByName(judgeName, triggerToast = true) {
+      // Find the corresponding group
+      let matchedGroup = null;
+      for (const group of MASTERCHEF_DATA) {
+        if (group.judges.includes(judgeName)) {
+          matchedGroup = group;
+          break;
+        }
+      }
+
+      if (!matchedGroup) return;
+
+      currentJudge = judgeName;
+      currentGroup = matchedGroup;
+      localStorage.setItem("sehc_current_judge", judgeName);
+
+      if (triggerToast) {
+        showToast(`Welcome, ${judgeName}!`, "👋");
+      }
+
+      // Sync cloud scores if URL is available
+      syncCloudScores();
+
+      // Show Team List view
+      showView("viewTeamList");
+      renderTeamList();
+    }
+
+    function switchJudge() {
+      currentJudge = null;
+      currentGroup = null;
+      localStorage.removeItem("sehc_current_judge");
+      showView("viewJudgeSelect");
+    }
+
+    /**
+     * STEP 2: Render Team and Dish List
+     */
+    function renderTeamList() {
+      if (!currentGroup || !currentJudge) return;
+
+      document.getElementById("currentJudgeGreeting").textContent = `Welcome, ${currentJudge}`;
+      document.getElementById("currentGroupBadge").textContent = currentGroup.groupTitle;
+
+      const container = document.getElementById("teamsContainer");
+      container.innerHTML = "";
+
+      let scoredCount = 0;
+
+      currentGroup.teams.forEach((team, index) => {
+        // Check if current judge has scored this team
+        const scoreRecord = localScores.find(s => 
+          s.judgeName.toLowerCase() === currentJudge.toLowerCase() && 
+          s.teamName.toLowerCase() === team.teamName.toLowerCase()
+        );
+
+        const isScored = !!scoreRecord;
+        if (isScored) scoredCount++;
+
+        const card = document.createElement("div");
+        card.className = `glass-card rounded-2xl p-4 border transition active:scale-[0.99] cursor-pointer ${
+          isScored ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 hover:border-samsung'
+        }`;
+        card.onclick = () => openScoringForm(team, scoreRecord);
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div class="space-y-1 pr-2 flex-1">
+              <div class="flex items-center space-x-2">
+                <span class="w-5 h-5 rounded-md bg-samsung-soft text-samsung text-[11px] font-extrabold flex items-center justify-center">
+                  #${index + 1}
+                </span>
+                <span class="text-xs font-bold text-samsung uppercase tracking-wide">
+                  ${team.teamName}
+                </span>
+              </div>
+              <h4 class="text-base font-bold text-slate-900 leading-snug">
+                ${team.dishName}
+              </h4>
+              <p class="text-xs font-medium text-slate-500">
+                ${team.dishNameKr}
+              </p>
+            </div>
+            
+            <div class="flex flex-col items-end space-y-1.5 flex-shrink-0">
+              ${isScored ? `
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <span class="mr-1">✓</span> ${scoreRecord.totalScore}/25
+                </span>
+                <span class="text-[11px] font-semibold text-slate-400">Tap to edit</span>
+              ` : `
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                  Pending
+                </span>
+                <span class="text-[11px] font-bold text-samsung">Score →</span>
+              `}
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      // Update progress bar
+      const totalTeams = currentGroup.teams.length;
+      const progressPercent = Math.round((scoredCount / totalTeams) * 100);
+      document.getElementById("scoringProgressText").textContent = `${scoredCount} / ${totalTeams} Completed`;
+      document.getElementById("scoringProgressBar").style.width = `${progressPercent}%`;
+    }
+
+    /**
+     * STEP 3: Scoring Form Management
+     */
+    function initStarRatings() {
+      const criteriaList = ['taste', 'decoration', 'presentation', 'teamwork', 'cleanliness'];
+      criteriaList.forEach(crit => {
+        const starContainer = document.getElementById(`stars_${crit}`);
+        if (!starContainer) return;
+        starContainer.innerHTML = "";
+
+        for (let star = 1; star <= 5; star++) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = `star-btn p-1.5 text-2xl focus:outline-none transition`;
+          btn.innerHTML = `<span class="star-icon text-slate-300" data-star="${star}">★</span>`;
+          btn.onclick = () => setCriterionRating(crit, star);
+          starContainer.appendChild(btn);
+        }
+      });
+    }
+
+    function setCriterionRating(criterion, value) {
+      currentRatings[criterion] = value;
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(15);
+      }
+      updateStarUI(criterion, value);
+      calculateTotalScore();
+    }
+
+    function updateStarUI(criterion, value) {
+      const container = document.getElementById(`stars_${criterion}`);
+      if (!container) return;
+      const stars = container.querySelectorAll(".star-icon");
+
+      stars.forEach((starEl, idx) => {
+        const starNum = idx + 1;
+        if (starNum <= value) {
+          starEl.className = "star-icon text-amber-400 drop-shadow-sm";
+        } else {
+          starEl.className = "star-icon text-slate-200";
+        }
+      });
+
+      const label = document.getElementById(`val_${criterion}`);
+      if (label) {
+        label.textContent = `${value} / 5`;
+      }
+    }
+
+    function calculateTotalScore() {
+      const total = Object.values(currentRatings).reduce((sum, val) => sum + val, 0);
+      document.getElementById("scoreTotalVal").textContent = total;
+      return total;
+    }
+
+    function openScoringForm(team, existingScore = null) {
+      currentTeam = team;
+      document.getElementById("scoringFormGroupTag").textContent = currentGroup.groupName;
+      document.getElementById("scoreTeamDept").textContent = team.teamName;
+      document.getElementById("scoreDishNameVi").textContent = team.dishName;
+      document.getElementById("scoreDishNameKr").textContent = team.dishNameKr;
+
+      // Reset or load existing ratings
+      if (existingScore) {
+        currentRatings = {
+          taste: existingScore.taste || 0,
+          decoration: existingScore.decoration || 0,
+          presentation: existingScore.presentation || 0,
+          teamwork: existingScore.teamwork || 0,
+          cleanliness: existingScore.cleanliness || 0
+        };
+        document.getElementById("judgeComment").value = existingScore.comment || "";
+      } else {
+        currentRatings = { taste: 0, decoration: 0, presentation: 0, teamwork: 0, cleanliness: 0 };
+        document.getElementById("judgeComment").value = "";
+      }
+
+      Object.keys(currentRatings).forEach(crit => {
+        updateStarUI(crit, currentRatings[crit]);
+      });
+      calculateTotalScore();
+      updateCommentCount();
+      document.getElementById("commentError").classList.add("hidden");
+
+      showView("viewScoringForm");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function backToTeamList() {
+      showView("viewTeamList");
+      renderTeamList();
+    }
+
+    function updateCommentCount() {
+      const text = document.getElementById("judgeComment").value;
+      document.getElementById("commentCharCount").textContent = `${text.length} chars`;
+      if (text.trim().length > 0) {
+        document.getElementById("commentError").classList.add("hidden");
+      }
+    }
+
+    /**
+     * Submit Score: Validate -> Save Locally -> Post to Google Sheet -> Back to Team List
+     */
+    async function submitScore() {
+      // 1. Validation: Ensure all criteria have been rated
+      const zeroRated = Object.entries(currentRatings).find(([k, v]) => v === 0);
+      if (zeroRated) {
+        showToast("Please rate all 5 criteria (1-5 stars)", "⚠️");
+        return;
+      }
+
+      // 2. Validation: Ensure English comment is provided
+      const comment = document.getElementById("judgeComment").value.trim();
+      if (!comment) {
+        document.getElementById("commentError").classList.remove("hidden");
+        document.getElementById("judgeComment").focus();
+        showToast("English comment is mandatory!", "⚠️");
+        return;
+      }
+
+      // Prepare payload
+      const totalScore = calculateTotalScore();
+      const scoreRecord = {
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        judgeName: currentJudge,
+        group: currentGroup.groupName,
+        teamName: currentTeam.teamName,
+        dishName: `${currentTeam.dishName} | ${currentTeam.dishNameKr}`,
+        taste: currentRatings.taste,
+        decoration: currentRatings.decoration,
+        presentation: currentRatings.presentation,
+        teamwork: currentRatings.teamwork,
+        cleanliness: currentRatings.cleanliness,
+        totalScore: totalScore,
+        comment: comment
+      };
+
+      // UI Loading state
+      setSubmitLoading(true);
+
+      // Save locally first (ensures offline reliability)
+      const existingIdx = localScores.findIndex(s => 
+        s.judgeName.toLowerCase() === currentJudge.toLowerCase() && 
+        s.teamName.toLowerCase() === currentTeam.teamName.toLowerCase()
+      );
+      if (existingIdx >= 0) {
+        localScores[existingIdx] = scoreRecord;
+      } else {
+        localScores.push(scoreRecord);
+      }
+      saveLocalScores();
+
+      // Submit to Google Apps Script if URL configured
+      const scriptUrl = getScriptUrl();
+      if (scriptUrl) {
+        try {
+          await fetch(scriptUrl, {
+            method: "POST",
+            mode: "no-cors", // Bypass CORS restrictions on GAS redirect
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(scoreRecord)
+          });
+          showToast("Score saved & synced to Google Sheet!", "🎉");
+        } catch (err) {
+          console.warn("GAS sync error:", err);
+          showToast("Score saved locally (Cloud sync pending)", "💾");
+        }
+      } else {
+        showToast("Score saved locally! Configure API in ⚙️ to sync.", "💾");
+      }
+
+      setSubmitLoading(false);
+
+      // Auto-back to Team List
+      setTimeout(() => {
+        backToTeamList();
+      }, 700);
+    }
+
+    function setSubmitLoading(isLoading) {
+      const btn = document.getElementById("btnSubmitScore");
+      const text = document.getElementById("btnSubmitText");
+      const spinner = document.getElementById("submitSpinner");
+
+      if (isLoading) {
+        btn.disabled = true;
+        btn.classList.add("opacity-80");
+        text.textContent = "Saving Score...";
+        spinner.classList.remove("hidden");
+      } else {
+        btn.disabled = false;
+        btn.classList.remove("opacity-80");
+        text.textContent = "Submit Score & Continue";
+        spinner.classList.add("hidden");
+      }
+    }
+
+    /**
+     * Fetch all scores from Google Apps Script Web App
+     */
+    async function syncCloudScores() {
+      const scriptUrl = getScriptUrl();
+      if (!scriptUrl) return;
+
+      try {
+        const res = await fetch(`${scriptUrl}?action=getScores`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.data && Array.isArray(json.data)) {
+            // Merge with localScores (cloud data takes precedence if newer)
+            localScores = json.data;
+            saveLocalScores();
+            if (currentGroup && currentJudge) {
+              renderTeamList();
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Sync cloud scores error:", e);
+      }
+    }
+
+    /**
+     * ==========================================================================
+     * ADMIN PORTAL LOGIC (LEADERBOARDS & DETAIL VIEW)
+     * ==========================================================================
+     */
+    function promptAdminAccess() {
+      document.getElementById("adminPassInput").value = "";
+      document.getElementById("adminPassError").classList.add("hidden");
+      document.getElementById("modalPasscode").classList.remove("hidden");
+      setTimeout(() => {
+        document.getElementById("adminPassInput").focus();
+      }, 100);
+    }
+
+    function closePasscodeModal() {
+      document.getElementById("modalPasscode").classList.add("hidden");
+    }
+
+    function verifyAdminPasscode() {
+      const pin = document.getElementById("adminPassInput").value.trim();
+      if (pin === ADMIN_PASSCODE) {
+        closePasscodeModal();
+        showToast("Admin access granted!", "🔓");
+        enterAdminDashboard();
+      } else {
+        document.getElementById("adminPassError").classList.remove("hidden");
+        document.getElementById("adminPassInput").value = "";
+        document.getElementById("adminPassInput").focus();
+      }
+    }
+
+    // Allow pressing "Enter" on PIN input
+    const adminPassInputEl = document.getElementById("adminPassInput");
+    if (adminPassInputEl) {
+      adminPassInputEl.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") verifyAdminPasscode();
+      });
+    }
+
+    function enterAdminDashboard() {
+      showView("viewAdmin");
+      fetchLeaderboardFromCloud();
+      renderAdminLeaderboard();
+    }
+
+    function exitAdmin() {
+      if (currentJudge) {
+        showView("viewTeamList");
+        renderTeamList();
+      } else {
+        showView("viewJudgeSelect");
+      }
+    }
+
+    function setAdminFilter(category) {
+      adminFilter = category;
+      ['All', 'Korean', 'Vietnamese', 'European'].forEach(tab => {
+        const btn = document.getElementById(`adminTab${tab}`);
+        btn.className = "flex-1 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition";
+      });
+
+      if (category === 'all') {
+        document.getElementById('adminTabAll').className = "flex-1 py-2 rounded-lg bg-white text-samsung shadow-sm transition font-bold";
+      } else if (category === 'Korean Dish') {
+        document.getElementById('adminTabKorean').className = "flex-1 py-2 rounded-lg bg-white text-samsung shadow-sm transition font-bold";
+      } else if (category === 'Vietnamese Dish') {
+        document.getElementById('adminTabVietnamese').className = "flex-1 py-2 rounded-lg bg-white text-samsung shadow-sm transition font-bold";
+      } else if (category === 'European Dish') {
+        document.getElementById('adminTabEuropean').className = "flex-1 py-2 rounded-lg bg-white text-samsung shadow-sm transition font-bold";
+      }
+
+      renderAdminLeaderboard();
+    }
+
+    async function fetchLeaderboardFromCloud() {
+      const statusEl = document.getElementById("adminSyncStatus");
+      statusEl.textContent = "Syncing with Google Sheets...";
+      await syncCloudScores();
+      statusEl.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+      renderAdminLeaderboard();
+    }
+
+    /**
+     * Compute and render Leaderboard statistics
+     */
+    function renderAdminLeaderboard() {
+      const container = document.getElementById("adminLeaderboardContainer");
+      container.innerHTML = "";
+
+      // Gather all teams across groups
+      let allTeams = [];
+      MASTERCHEF_DATA.forEach(group => {
+        group.teams.forEach(t => {
+          allTeams.push({
+            ...t,
+            groupName: group.groupName,
+            groupTitle: group.groupTitle,
+            expectedJudges: group.judges
+          });
+        });
+      });
+
+      // Filter by category if selected
+      if (adminFilter !== "all") {
+        allTeams = allTeams.filter(t => t.groupName === adminFilter);
+      }
+
+      // Aggregate scores per team
+      const teamStats = allTeams.map(team => {
+        const teamScores = localScores.filter(s => 
+          s.teamName.toLowerCase() === team.teamName.toLowerCase()
+        );
+
+        const judgeCount = teamScores.length;
+        const totalSum = teamScores.reduce((sum, s) => sum + (Number(s.totalScore) || 0), 0);
+        const avgScore = judgeCount > 0 ? (totalSum / judgeCount).toFixed(1) : 0;
+
+        return {
+          ...team,
+          scores: teamScores,
+          judgeCount: judgeCount,
+          totalSum: totalSum,
+          avgScore: Number(avgScore)
+        };
+      });
+
+      // Sort by Average Score (descending), then Total Sum
+      teamStats.sort((a, b) => (b.avgScore - a.avgScore) || (b.totalSum - a.totalSum));
+
+      if (teamStats.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">No teams found for this category.</p>`;
+        return;
+      }
+
+      teamStats.forEach((t, idx) => {
+        const rank = idx + 1;
+        let rankBadge = `<span class="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center">${rank}</span>`;
+        if (rank === 1) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-400 text-white font-extrabold text-xs flex items-center justify-center shadow-md">🥇</span>`;
+        if (rank === 2) rankBadge = `<span class="w-6 h-6 rounded-full bg-slate-300 text-slate-800 font-extrabold text-xs flex items-center justify-center shadow-md">🥈</span>`;
+        if (rank === 3) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-700 text-white font-extrabold text-xs flex items-center justify-center shadow-md">🥉</span>`;
+
+        const card = document.createElement("div");
+        card.className = "glass-card rounded-2xl p-4 border border-slate-200 hover:border-samsung transition active:scale-[0.99] cursor-pointer space-y-2";
+        card.onclick = () => openTeamDetailModal(t);
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div class="flex items-start space-x-2.5 flex-1 pr-2">
+              <div class="pt-0.5">${rankBadge}</div>
+              <div class="space-y-0.5">
+                <span class="text-[10px] font-bold text-samsung uppercase tracking-wide">${t.teamName}</span>
+                <h4 class="text-sm font-bold text-slate-900 leading-snug">${t.dishName}</h4>
+                <p class="text-[11px] text-slate-500 font-medium">${t.dishNameKr}</p>
+              </div>
+            </div>
+
+            <div class="text-right flex-shrink-0">
+              <div class="text-lg font-black text-samsung">${t.avgScore} <span class="text-xs font-semibold text-slate-400">/ 25</span></div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${t.judgeCount === 3 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+                ${t.judgeCount} / 3 Judges
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+            <span>Category: <strong class="text-slate-700">${t.groupName}</strong></span>
+            <span class="text-samsung font-bold">View breakdown →</span>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    /**
+     * Modal: Detailed Breakdown for a Team in Admin Mode
+     */
+    function openTeamDetailModal(teamStat) {
+      document.getElementById("detailTeamGroup").textContent = teamStat.groupName;
+      document.getElementById("detailTeamName").textContent = teamStat.teamName;
+      document.getElementById("detailDishName").textContent = `${teamStat.dishName} (${teamStat.dishNameKr})`;
+
+      const listContainer = document.getElementById("detailScoresList");
+      listContainer.innerHTML = "";
+
+      if (!teamStat.scores || teamStat.scores.length === 0) {
+        listContainer.innerHTML = `
+          <div class="text-center py-8 text-slate-400 text-xs">
+            <p>No judges have submitted scores for this team yet.</p>
+          </div>
+        `;
+      } else {
+        teamStat.scores.forEach(s => {
+          const item = document.createElement("div");
+          item.className = "bg-slate-50 rounded-2xl p-3.5 border border-slate-200 space-y-2.5";
+
+          item.innerHTML = `
+            <div class="flex items-center justify-between border-b pb-2">
+              <div class="flex items-center space-x-2">
+                <div class="w-7 h-7 rounded-full bg-samsung-soft text-samsung flex items-center justify-center">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-900">${s.judgeName}</h5>
+                  <span class="text-[10px] text-slate-400">${s.timestamp || 'N/A'}</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-base font-extrabold text-samsung">${s.totalScore}</span>
+                <span class="text-xs text-slate-400 font-semibold">/ 25</span>
+              </div>
+            </div>
+
+            <!-- Criteria Breakdown Chips -->
+            <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+              <div class="bg-white p-1.5 rounded-lg border border-slate-200 flex justify-between">
+                <span class="text-slate-500">Taste:</span>
+                <strong class="text-amber-500 font-bold">${s.taste} ★</strong>
+              </div>
+              <div class="bg-white p-1.5 rounded-lg border border-slate-200 flex justify-between">
+                <span class="text-slate-500">Plating:</span>
+                <strong class="text-amber-500 font-bold">${s.decoration} ★</strong>
+              </div>
+              <div class="bg-white p-1.5 rounded-lg border border-slate-200 flex justify-between">
+                <span class="text-slate-500">Presentation:</span>
+                <strong class="text-amber-500 font-bold">${s.presentation} ★</strong>
+              </div>
+              <div class="bg-white p-1.5 rounded-lg border border-slate-200 flex justify-between">
+                <span class="text-slate-500">Teamwork:</span>
+                <strong class="text-amber-500 font-bold">${s.teamwork} ★</strong>
+              </div>
+              <div class="bg-white p-1.5 rounded-lg border border-slate-200 flex justify-between col-span-2">
+                <span class="text-slate-500">Cleanliness:</span>
+                <strong class="text-amber-500 font-bold">${s.cleanliness} ★</strong>
+              </div>
+            </div>
+
+            <!-- Judge Comment -->
+            <div class="bg-blue-50/70 p-2.5 rounded-xl border border-blue-100">
+              <span class="text-[10px] font-bold text-samsung uppercase tracking-wide block mb-0.5">Judge's Comment:</span>
+              <p class="text-xs text-slate-800 italic leading-relaxed">"${s.comment || 'No comment provided'}"</p>
+            </div>
+          `;
+
+          listContainer.appendChild(item);
+        });
+      }
+
+      document.getElementById("modalTeamDetail").classList.remove("hidden");
+    }
+
+    function closeTeamDetailModal() {
+      document.getElementById("modalTeamDetail").classList.add("hidden");
+    }
+
+    /**
+     * Export all scores as CSV file
+     */
+    function exportScoresToCSV() {
+      if (localScores.length === 0) {
+        showToast("No scores available to export!", "⚠️");
+        return;
+      }
+
+      const headers = ["Timestamp", "JudgeName", "Group", "TeamName", "DishName", "Taste", "Decoration", "Presentation", "Teamwork", "Cleanliness", "TotalScore", "Comment"];
+      let csvContent = "\uFEFF" + headers.join(",") + "\n"; // Add UTF-8 BOM for Excel
+
+      localScores.forEach(s => {
+        const row = [
+          `"${s.timestamp || ''}"`,
+          `"${s.judgeName || ''}"`,
+          `"${s.group || ''}"`,
+          `"${s.teamName || ''}"`,
+          `"${(s.dishName || '').replace(/"/g, '""')}"`,
+          s.taste || 0,
+          s.decoration || 0,
+          s.presentation || 0,
+          s.teamwork || 0,
+          s.cleanliness || 0,
+          s.totalScore || 0,
+          `"${(s.comment || '').replace(/"/g, '""')}"`
+        ];
+        csvContent += row.join(",") + "\n";
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `SEHC_Masterchef_Scores_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("CSV exported successfully!", "📥");
+    }
+
+    /**
+     * UI Screen View Switcher Utility
+     */
+    function showView(viewId) {
+      const views = ["viewJudgeSelect", "viewTeamList", "viewScoringForm", "viewAdmin"];
+      views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (id === viewId) {
+            el.classList.remove("hidden");
+          } else {
+            el.classList.add("hidden");
+          }
+        }
+      });
+    }
+
+    /**
+     * Toast Utility
+     */
+    let toastTimeout = null;
+    function showToast(message, icon = "✅") {
+      const toast = document.getElementById("toast");
+      const msg = document.getElementById("toastMessage");
+      const ico = document.getElementById("toastIcon");
+
+      msg.textContent = message;
+      ico.textContent = icon;
+
+      toast.classList.remove("-translate-y-20", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("-translate-y-20", "opacity-0");
+      }, 2500);
+    }
+  </script>
+</body>
+</html>
